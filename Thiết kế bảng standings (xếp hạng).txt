@@ -1,0 +1,16 @@
+			Thiết kế bảng standings (xếp hạng)
+
+-Không insert dữ liệu trực tiếp vào bảng -> không thể create table
+-Sử dụng View bằng dữ liệu từ bảng match
+-Bảng gồm: 
+league_id: giải đấu 
+season: mùa
+team_id: đội
+matches_played: số trận
+wins/draws/losses: thống kê
+goals_for: bàn thắng
+goals_against: bàn thua
+goal_diff: hiệu số
+points: điểm
+position: thứ hạng
+-Trận thắng +3 điểm, hòa +1 điểm, thua +0 điểm
