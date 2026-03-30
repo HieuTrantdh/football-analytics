@@ -14,11 +14,13 @@ def get_connection():
     try:
         connection = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
+            port=os.getenv("DB_PORT"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASS"),
             database=os.getenv("DB_NAME")
         )
         if connection.is_connected():
+            print("Success")
             return connection
     except Error as e:
         print(f" Lỗi kết nối MySQL: {e}")
@@ -38,3 +40,5 @@ def get_sqlalchemy_engine():
     # Tạo chuỗi kết nối
     engine = create_engine(f"mysql+mysqlconnector://{user}:{password}@{host}/{db}")
     return engine
+
+connector = get_connection();
