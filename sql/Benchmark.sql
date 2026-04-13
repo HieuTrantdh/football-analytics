@@ -1,4 +1,4 @@
-USE football_analytics;
+USE football_db;
 -- Benchmark trước khi thêm index
 ALTER TABLE matches DROP INDEX idx_matches_match_date;
 EXPLAIN FORMAT=TRADITIONAL
