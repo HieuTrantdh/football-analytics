@@ -8,7 +8,7 @@ WITH raw_stats AS (
         CASE WHEN m.home_score = m.away_score THEN 1 ELSE 0 END as d,
         CASE WHEN m.home_score < m.away_score THEN 1 ELSE 0 END as l,
         m.home_score as gf, m.away_score as ga
-    FROM `match` m 
+    FROM matches m 
     JOIN season s ON m.season_id = s.season_id 
     WHERE m.status = 'Finished'
     
@@ -20,7 +20,7 @@ WITH raw_stats AS (
         CASE WHEN m.away_score = m.home_score THEN 1 ELSE 0 END as d,
         CASE WHEN m.away_score < m.home_score THEN 1 ELSE 0 END as l,
         m.away_score as gf, m.home_score as ga
-    FROM `match` m 
+    FROM matches m 
     JOIN season s ON m.season_id = s.season_id
     WHERE m.status = 'Finished'
 )
