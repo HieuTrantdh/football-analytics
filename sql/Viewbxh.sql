@@ -1,4 +1,4 @@
-USE football_analytics;
+USE football_db;
 
 CREATE OR REPLACE VIEW vw_flexible_standings AS
 WITH raw_stats AS (
