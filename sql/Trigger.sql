@@ -239,3 +239,35 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- =========================================================
+-- Trigger 4: before_player_stats_insert
+-- Muc dich:
+--   Tu dong cap nhat rating cau thu khi insert mot ban ghi moi
+-- Dieu kien:
+--   Xu ly trong moi truong hop insert vao player_stats
+-- =========================================================
+
+DROP TRIGGER IF EXISTS before_player_stats_insert;
+
+DELIMITER $$
+
+CREATE TRIGGER before_player_stats_insert
+BEFORE INSERT ON player_stats
+FOR EACH ROW
+BEGIN
+	SET NEW.rating = CASE
+		WHEN ((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*1.27) <= 0 THEN 0
+		WHEN NEW.minutes_played = 0 THEN 0
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played > 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists)*1.27 - (NEW.red_cards*3 + NEW.yellow_cards)*1.27), 2),
+					ROUND(FLOOR(((NEW.goals*3 + NEW.assists)*1.27) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played <= 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*1.27), 2),
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+		END;
+END$$
+
+DELIMITER ;
