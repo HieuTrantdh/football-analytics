@@ -239,3 +239,89 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- =========================================================
+-- Trigger 4: before_player_stats_insert
+-- Muc dich:
+--   Tu dong cap nhat rating cau thu khi insert mot ban ghi moi
+-- Dieu kien:
+--   Xu ly trong moi truong hop insert vao player_stats
+-- =========================================================
+
+DROP TRIGGER IF EXISTS before_player_stats_insert;
+
+DELIMITER $$
+
+CREATE TRIGGER before_player_stats_insert
+BEFORE INSERT ON player_stats
+FOR EACH ROW
+BEGIN
+    -- Thưởng/Phạt thêm nếu chỉ số/minute_played tốt
+    DECLARE bonus_rate DECIMAL(5,2);
+    SET bonus_rate = 1.27;
+
+	SET NEW.rating = CASE
+        -- Xử lý case đặc biệt
+        WHEN NEW.minutes_played = 0 THEN NULL
+		WHEN ((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate) <= 0 THEN 0
+        WHEN ((NEW.goals*3 + NEW.assists)*bonus_rate - (NEW.red_cards*3 + NEW.yellow_cards)) >= 100 then 100
+
+        -- Xử lý chính
+        -- Performance tot
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played > 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists)*bonus_rate - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate), 2),
+					ROUND(FLOOR(((NEW.goals*3 + NEW.assists)*bonus_rate) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+
+        -- Performance binh thuong
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played <= 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate), 2),
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+		END;
+END$$
+
+DELIMITER ;
+
+-- =========================================================
+-- Trigger 5: before_player_stats_update
+-- Muc dich:
+--   Tu dong cap nhat rating cau thu khi update mot ban ghi(+/- goal, assist, red/yellow card)
+-- Dieu kien:
+--   Xu ly trong moi truong hop update trong player_stats
+-- =========================================================
+
+DROP TRIGGER IF EXISTS before_player_stats_update;
+
+DELIMITER $$
+
+CREATE TRIGGER before_player_stats_update
+BEFORE UPDATE ON player_stats
+FOR EACH ROW
+BEGIN
+    -- Thưởng/Phạt thêm nếu chỉ số/minute_played tốt
+    DECLARE bonus_rate DECIMAL(5,2);
+    SET bonus_rate = 1.27;
+
+	SET NEW.rating = CASE
+        -- Xử lý case đặc biệt
+        WHEN NEW.minutes_played = 0 THEN NULL
+		WHEN ((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate) <= 0 THEN 0
+        WHEN ((NEW.goals*3 + NEW.assists)*bonus_rate - (NEW.red_cards*3 + NEW.yellow_cards)) >= 100 then 100
+
+        -- Xử lý chính
+        -- Performance tot
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played > 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists)*bonus_rate - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate), 2),
+					ROUND(FLOOR(((NEW.goals*3 + NEW.assists)*bonus_rate) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+
+        -- Performance binh thuong
+		WHEN (NEW.goals*3 + NEW.assists)/NEW.minutes_played <= 0.053 THEN
+			IF((NEW.red_cards*3 + NEW.yellow_cards)/NEW.minutes_played > 0.011, 
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)*bonus_rate), 2),
+					ROUND(((NEW.goals*3 + NEW.assists) - (NEW.red_cards*3 + NEW.yellow_cards)), 2))
+		END;
+END$$
+
+DELIMITER ;
