@@ -5,7 +5,7 @@
 -- Bao gom:
 --   1. vw_full_standings
 --   2. vw_player_ratings
---   3. 
+--   3. vw_season_summary
 -- =========================================================
 
 
