@@ -26,7 +26,7 @@ DROP TRIGGER IF EXISTS before_match_insert;
 DELIMITER $$
 
 CREATE TRIGGER before_match_insert
-BEFORE INSERT ON `match`
+BEFORE INSERT ON `matches`
 FOR EACH ROW
 BEGIN
     IF NEW.home_team_id = NEW.away_team_id THEN
@@ -55,7 +55,7 @@ DROP TRIGGER IF EXISTS after_match_insert;
 DELIMITER $$
 
 CREATE TRIGGER after_match_insert
-AFTER INSERT ON `match`
+AFTER INSERT ON `matches`
 FOR EACH ROW
 BEGIN
     IF NEW.status = 'finished'
@@ -160,7 +160,7 @@ DROP TRIGGER IF EXISTS after_match_update;
 DELIMITER $$
 
 CREATE TRIGGER after_match_update
-AFTER UPDATE ON `match`
+AFTER UPDATE ON `matches`
 FOR EACH ROW
 BEGIN
     IF OLD.status <> 'finished'
