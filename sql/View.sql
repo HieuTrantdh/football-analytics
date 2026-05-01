@@ -5,7 +5,7 @@
 -- Bao gom:
 --   1. vw_full_standings
 --   2. vw_player_ratings
---   3. 
+--   3. vw_season_summary
 -- =========================================================
 
 
@@ -117,7 +117,7 @@ SELECT
 
 FROM player p
     JOIN player_stats ps ON ps.player_id = p.player_id
-    JOIN season s ON s.season_id = ps.season_idJOIN league l ON l.league_id = s.league_id
+    JOIN season s ON s.season_id = ps.season_id JOIN league l ON l.league_id = s.league_id
 
 WHERE ps.rating IS NOT NULL
 
