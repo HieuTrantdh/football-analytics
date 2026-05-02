@@ -18,6 +18,7 @@ python -m streamlit run app.py   # Chạy app
 
 
 3. sua ten  stored procedure  GetTopPLayerBySeason sang GetTopPlayersBySeason
+hoac sua trong cau_thu.py
 
 -- 1. Xóa hàm cũ bị sai tên
 DROP PROCEDURE IF EXISTS GetTopPLayerBySeason;
