@@ -1,87 +1,75 @@
 # European Football Analytics System
 
-## 📁 Project Structure
+## Cấu trúc dự án
 
 ```bash
 football-analytics/
 ├── sql/
-│   ├── 01_schema_ddl.sql
-│   ├── 02_triggers.sql
-│   ├── 03_stored_procedures.sql
-│   ├── 04_views.sql
-│   ├── 05_indexes.sql
-│   └── 06_complex_queries.sql
+│   ├── Benchmark.sql
+│   ├── Complex queries.sql
+│   ├── Stored procedure.sql
+│   ├── Trigger.sql
+│   ├── View.sql
 ├── python/
 │   ├── convert_sqlite_mysql.py
 │   ├── db_connection.py
 │   └── data_validation.py
 ├── notebooks/
-│   ├── NB01_tong_quan.ipynb
-│   ├── NB02_phan_tich_cau_thu.ipynb
-│   └── NB03_phan_tich_giai_dau.ipynb
-├── streamlit/
+│   ├── NB01_
+│   ├── Phân tích bảng xếp hạng, trận đấu.ipynb
+├── streamlit_app/
 │   ├── app.py
+│   ├── db.py
 │   ├── pages/
-│   │   ├── 1_bang_xep_hang.py
-│   │   ├── 2_cau_thu.py
-│   │   └── 3_so_sanh_doi.py
-│   └── utils/
-│       └── db_utils.py
+│   │   ├── 1_standings.py
+│   │   ├── 2_head_to_head.py
+│   │   ├── 3_top_players.py
+│   │   ├── 4_team_history.py
+│   │   └── 5_overview.py
 ├── docs/
-│   ├── ERD.png
-│   ├── benchmark_report.pdf
-│   └── bao_cao_ky_thuat.docx
-├── CLAUDE_CONTEXT.md
-├── TEAM_RULES.md
+│   ├── ISSUES_AND_SOLUTIONS.md
+├── pyproject.toml
+├── LICENSE
 └── README.md
 ```
 
-## 🧩 Mô tả cấu trúc
+## Mô tả chi tiết
 
-* **`sql/`**
-  Chứa toàn bộ câu lệnh SQL phục vụ hệ thống:
+### **`sql/`**
+Chứa các tệp SQL phục vụ cho cơ sở dữ liệu:
+- **Benchmark.sql**: Các truy vấn kiểm tra hiệu năng.
+- **Complex queries.sql**: Các truy vấn phức tạp.
+- **Stored procedure.sql**: Các thủ tục lưu trữ.
+- **Trigger.sql**: Các trigger tự động cập nhật dữ liệu.
+- **View.sql**: Các view hỗ trợ truy vấn.
 
-  * Thiết kế schema (DDL)
-  * Triggers tự động cập nhật dữ liệu (ví dụ: bảng xếp hạng)
-  * Stored Procedures có tham số
-  * Views phục vụ truy vấn thực tế
-  * Indexes để tối ưu hiệu năng
-  * Các truy vấn nâng cao (CTE, Window Functions)
+### **`python/`**
+Chứa các script Python:
+- **convert_sqlite_mysql.py**: Chuyển đổi dữ liệu từ SQLite sang MySQL.
+- **db_connection.py**: Thiết lập kết nối cơ sở dữ liệu.
+- **data_validation.py**: Kiểm tra và xác thực dữ liệu.
 
-* **`python/`**
-  Các script xử lý dữ liệu và kết nối database:
+### **`notebooks/`**
+Chứa các Jupyter Notebook phục vụ phân tích dữ liệu:
+- **NB01_**: Notebook tổng quan.
+- **Phân tích bảng xếp hạng, trận đấu.ipynb**: Phân tích chi tiết bảng xếp hạng và trận đấu.
 
-  * Chuyển đổi dữ liệu từ SQLite sang MySQL
-  * Thiết lập kết nối database
-  * Kiểm tra và validate dữ liệu
+### **`streamlit_app/`**
+Ứng dụng web sử dụng Streamlit:
+- **app.py**: File chính chạy ứng dụng.
+- **db.py**: Xử lý kết nối cơ sở dữ liệu.
+- **pages/**: Chứa các trang chức năng:
+  - **1_standings.py**: Trang bảng xếp hạng.
+  - **2_head_to_head.py**: Trang so sánh đối đầu.
+  - **3_top_players.py**: Trang cầu thủ xuất sắc.
+  - **4_team_history.py**: Trang lịch sử đội bóng.
+  - **5_overview.py**: Trang tổng quan.
 
-* **`notebooks/`**
-  Jupyter Notebook phục vụ phân tích dữ liệu:
+### **`docs/`**
+Chứa tài liệu dự án:
+- **ISSUES_AND_SOLUTIONS.md**: Các vấn đề và giải pháp.
 
-  * Tổng quan dataset
-  * Phân tích cầu thủ
-  * Phân tích giải đấu
-    → Bao gồm biểu đồ và insight
-
-* **`streamlit/`**
-  Ứng dụng web sử dụng Streamlit:
-
-  * `app.py`: file chính chạy ứng dụng
-  * `pages/`: các trang chức năng (bảng xếp hạng, cầu thủ, so sánh đội)
-  * `utils/`: các hàm hỗ trợ kết nối và truy vấn database
-
-* **`docs/`**
-  Tài liệu của dự án:
-
-  * ERD (sơ đồ quan hệ)
-  * Báo cáo benchmark (trước/sau khi tối ưu index)
-  * Báo cáo kỹ thuật tổng thể
-
-* **`CLAUDE_CONTEXT.md`**
-  File hỗ trợ bối cảnh và định hướng phát triển (dùng trong quá trình làm project)
-
-* **`TEAM_RULES.md`**
-  Quy tắc làm việc nhóm, phân công và quy trình phát triển
-
-* **`README.md`**
-  File giới thiệu tổng quan dự án và hướng dẫn sử dụng
+### **Các tệp khác**
+- **pyproject.toml**: Tệp cấu hình dự án.
+- **LICENSE**: Thông tin bản quyền.
+- **README.md**: Tệp giới thiệu tổng quan dự án.
