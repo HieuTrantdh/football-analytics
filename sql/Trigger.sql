@@ -8,6 +8,8 @@ USE football_db;
 --   1. before_match_insert
 --   2. after_match_insert
 --   3. after_match_update
+--   4. before_player_stats_insert
+--   5. before_player_stats_update
 -- =========================================================
 
 
