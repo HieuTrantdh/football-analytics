@@ -82,7 +82,7 @@ def execute_stored_procedure(proc_name: str, params: tuple) -> pd.DataFrame:
 def GetStandings(league: str, year: str): return execute_stored_procedure("GetStandings", (league, year))
 def GetHeadToHead(t1: str, t2: str): return execute_stored_procedure("GetHeadToHead", (t1, t2))
 def GetTopPlayerBySeason(s: str, n: int): return execute_stored_procedure("GetTopPlayerBySeason", (s, n))
-def GetTeamHistory(team: str): return execute_stored_procedure("GetTeamHistory1", (team,))
+def GetTeamHistory(team: str): return execute_stored_procedure("GetTeamHistory", (team,))
 
 @st.cache_data
 def GetLeagues():
