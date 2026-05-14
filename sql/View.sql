@@ -33,16 +33,17 @@ SELECT
     ) AS position,
     
     t.league_name,
-    t.year as season,
-    team.name as team_name, 
-    COUNT(*) AS matches_played,
-    SUM(CASE WHEN t.points = 3 THEN 1 ELSE 0 END) AS wins,
-    SUM(CASE WHEN t.points = 1 THEN 1 ELSE 0 END) AS draws,
-    SUM(CASE WHEN t.points = 0 THEN 1 ELSE 0 END) AS losses,
-    SUM(t.goals_for) AS goals_for,
-    SUM(t.goals_against) AS goals_against,
-    SUM(t.goals_for - t.goals_against) AS goal_diff,
-    SUM(t.points) AS total_points
+    t.year AS season,
+    team.name AS team_name, 
+
+    CAST(COUNT(*) AS SIGNED) AS matches_played,
+    CAST(SUM(CASE WHEN t.points = 3 THEN 1 ELSE 0 END) AS SIGNED) AS wins,
+    CAST(SUM(CASE WHEN t.points = 1 THEN 1 ELSE 0 END) AS SIGNED) AS draws,
+    CAST(SUM(CASE WHEN t.points = 0 THEN 1 ELSE 0 END) AS SIGNED) AS losses,
+    CAST(SUM(t.goals_for) AS SIGNED) AS goals_for,
+    CAST(SUM(t.goals_against) AS SIGNED) AS goals_against,
+    CAST(SUM(t.goals_for - t.goals_against) AS SIGNED) AS goal_diff,
+    CAST(SUM(t.points) AS SIGNED) AS total_points
 
 FROM (
     -- Doi nha

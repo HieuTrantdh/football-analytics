@@ -112,9 +112,9 @@ begin
         p.full_name,
         ps.goals ,
         ps.assists ,
-		ps.yellow_cards,
-		ps.red_cards,
-		ps.minutes_played,
+		    ps.yellow_cards,
+		    ps.red_cards,
+		    ps.minutes_played,
         ps.rating
 
         from player_stats ps
@@ -138,31 +138,25 @@ delimiter ;
 --    CALL GetTeamHistory('Barcelona');
 --    CALL GetTeamHistory('Manchester City');
 -- ============================================================
-DELIMITER $$
+DELIMITER $
 CREATE PROCEDURE GetTeamHistory(
   IN p_team_name VARCHAR(100)
 )
 BEGIN
-  SELECT
-    s.year                                       AS season,
-    l.name                                       AS league,
-    RANK() OVER (
-      PARTITION BY s.season_id
-      ORDER BY st.points DESC, (st.goals_for - st.goals_against) DESC
-    )                                            AS final_rank,
-    st.wins                                      AS W,
-    st.draws                                     AS D,
-    st.losses                                    AS L,
-    st.points                                    AS Pts,
-    st.goals_for                                 AS GF,
-    st.goals_against                             AS GA,
-    (st.goals_for - st.goals_against)            AS GD,
-    (st.wins + st.draws + st.losses)             AS MP
-  FROM standings st
-  JOIN team   t ON t.team_id    = st.team_id
-  JOIN season s ON s.season_id  = st.season_id
-  JOIN league l ON l.league_id  = s.league_id
-  WHERE t.name  = p_team_name COLLATE utf8mb4_unicode_ci
-  ORDER BY s.year ASC;
+  SELECT 
+    vw.`position`,
+    vw.league_name,
+    vw.season,
+    vw.matches_played AS MP,
+    vw.wins AS W,
+    vw.draws AS D,
+    vw.losses AS L,
+    vw.goals_for AS GF,
+    vw.goals_against AS GA,
+    vw.goal_diff AS GD,
+    vw.total_points AS points
+    FROM vw_full_standings vw
+  WHERE vw.team_name  = p_team_name COLLATE utf8mb4_unicode_ci
+  ORDER BY vw.season ASC;
 END$$
 DELIMITER ;
