@@ -1,124 +1,125 @@
 import pandas as pd
 import streamlit as st
-import sys, os
-from sqlalchemy import text
+import os
+import urllib.parse
+import pymysql
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
-# Setup path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = os.path.abspath(os.path.join(current_dir, '..'))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
+# Nạp file .env
+load_dotenv()
 
-from python.db_connection import get_sqlalchemy_engine
+# ========================== KẾT NỐI DATABASE ==========================
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Đang kết nối Database...")
 def get_engine():
-    return get_sqlalchemy_engine()
+    try:
+        # 1. Lấy dữ liệu từ file .env
+        user = os.getenv("DB_USER")
+        raw_password = os.getenv("DB_PASSWORD")
+        host = os.getenv("DB_HOST", "127.0.0.1")
+        port = os.getenv("DB_PORT", "3306")
+        db_name = os.getenv("DB_NAME")
+
+        # 2. Dự phòng Streamlit Secrets
+        if not all([user, raw_password, db_name]):
+            try:
+                if "database" in st.secrets:
+                    db = st.secrets["database"]
+                    user = db.get("user", user)
+                    raw_password = db.get("password", raw_password)
+                    host = db.get("host", host)
+                    port = db.get("port", port)
+                    db_name = db.get("database", db_name)
+            except: pass
+
+        if not all([user, raw_password, db_name]):
+            st.error("Thiếu thông tin cấu hình Database!")
+            return None
+
+        # 3. Mã hóa mật khẩu để xử lý ký tự đặc biệt (@, #, *)
+        safe_password = urllib.parse.quote_plus(raw_password)
+        conn_string = f"mysql+pymysql://{user}:{safe_password}@{host}:{port}/{db_name}?charset=utf8mb4"
+
+        return create_engine(
+            conn_string,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            pool_pre_ping=True
+        )
+    except Exception as e:
+        st.error(f"Lỗi khởi tạo Engine: {e}")
+        return None
+
+# ========================== XỬ LÝ STORED PROCEDURE ==========================
 
 def execute_stored_procedure(proc_name: str, params: tuple) -> pd.DataFrame:
-    """
-    Hàm helper dùng chung để gọi Stored Procedure và dọn dẹp buffer 
-    nhằm tránh lỗi 'Commands out of sync'.
-    """
     engine = get_engine()
+    if engine is None:
+        return pd.DataFrame()
+    
+    # Lấy kết nối thuần để chạy callproc
     raw_conn = engine.raw_connection()
+    cursor = None
     try:
-        # Dùng dictionary=True để cursor trả về dữ liệu dạng dict (khớp với DataFrame)
-        cursor = raw_conn.cursor(dictionary=True)
-        
-        # Gọi procedure
+        #Dùng DictCursor của pymysql thay vì dictionary=True
+        cursor = raw_conn.cursor(pymysql.cursors.DictCursor)
         cursor.callproc(proc_name, params)
         
-        # Đọc tất cả kết quả trả về để làm sạch kết nối
-        results = []
-        for result in cursor.stored_results():
-            results = result.fetchall()
-            break  # Thường chúng ta chỉ lấy tập kết quả (result set) đầu tiên
-            
+        # Với PyMySQL, kết quả trả về nằm trực tiếp sau khi fetch
+        results = cursor.fetchall()
         return pd.DataFrame(results)
     except Exception as e:
-        st.error(f"Lỗi thực thi {proc_name}: {e}")
+        st.error(f"Lỗi thực thi Procedure '{proc_name}': {e}")
         return pd.DataFrame()
     finally:
-        cursor.close()
+        if cursor: cursor.close()
         raw_conn.close()
 
-# ── SP1: Bảng xếp hạng ──────────────────────────────────────────
-def GetStandings(league: str, year: str) -> pd.DataFrame:
-    return execute_stored_procedure("GetStandings", (league, year))
+# ========================== CÁC HÀM TRUY VẤN (GIỮ NGUYÊN LOGIC) ==========================
 
-# ── SP2: Đối đầu trực tiếp ──────────────────────────────────────
-def GetHeadToHead(team1: str, team2: str) -> pd.DataFrame:
-    return execute_stored_procedure("GetHeadToHead", (team1, team2))
-
-# ── SP3: Top cầu thủ ──────────────────────────────────────────
-def GetTopPlayerBySeason(season: str, top_n: int) -> pd.DataFrame:
-    return execute_stored_procedure("GetTopPlayerBySeason", (season, top_n))
-
-# ── SP4: Lịch sử đội bóng ──────────────────────────────────────
-def GetTeamHistory(team: str) -> pd.DataFrame:
-    return execute_stored_procedure("GetTeamHistory", (team,))
-
-# ── Các hàm bổ trợ (Dùng SELECT đơn giản nên vẫn dùng pd.read_sql được) ──
-@st.cache_data
-def GetLeagues() -> list:
-    engine = get_engine()
-    df = pd.read_sql("SELECT DISTINCT name FROM league ORDER BY name", engine)
-    return df["name"].tolist()
+def GetStandings(league: str, year: str): return execute_stored_procedure("GetStandings", (league, year))
+def GetHeadToHead(t1: str, t2: str): return execute_stored_procedure("GetHeadToHead", (t1, t2))
+def GetTopPlayerBySeason(s: str, n: int): return execute_stored_procedure("GetTopPlayerBySeason", (s, n))
+def GetTeamHistory(team: str): return execute_stored_procedure("GetTeamHistory", (team,))
 
 @st.cache_data
-def GetSeasons() -> list:
+def GetLeagues():
     engine = get_engine()
-    df = pd.read_sql("SELECT DISTINCT year FROM season ORDER BY year DESC", engine)
-    return df["year"].tolist()
+    if not engine: return []
+    return pd.read_sql("SELECT DISTINCT name FROM league ORDER BY name", engine)["name"].tolist()
 
 @st.cache_data
-def GetTeams() -> list:
+def GetSeasons():
     engine = get_engine()
-    df = pd.read_sql("SELECT DISTINCT name FROM team ORDER BY name", engine)
-    return df["name"].tolist()
+    if not engine: return []
+    return pd.read_sql("SELECT DISTINCT year FROM season ORDER BY year DESC", engine)["year"].tolist()
 
+@st.cache_data
+def GetTeams():
+    engine = get_engine()
+    if not engine: return []
+    return pd.read_sql("SELECT DISTINCT name FROM team ORDER BY name", engine)["name"].tolist()
 
-# ── VIEW 1: Bảng xếp hạng đầy đủ ───────────────────────────────
-def GetFullStandings(league: str = "Tất cả") -> pd.DataFrame:
+def GetFullStandings(league: str = "Tất cả"):
     engine = get_engine()
-    try:
-        if league == "Tất cả":
-            return pd.read_sql(
-                "SELECT * FROM vw_full_standings LIMIT 500",
-                engine
-            )
-        else:
-            return pd.read_sql(
-                "SELECT * FROM vw_full_standings WHERE league_name = %(league)s",
-                engine,
-                params={"league": league}
-            )
-    except Exception as e:
-        st.error(f"Lỗi truy vấn vw_full_standings: {e}")
-        return pd.DataFrame()
- 
-# ── VIEW 2: Rating cầu thủ ──────────────────────────────────────
-def GetPlayerRatings(player_name: str) -> pd.DataFrame:
+    if not engine: return pd.DataFrame()
+    query = "SELECT * FROM vw_full_standings"
+    if league != "Tất cả":
+        query += " WHERE league_name = :league"
+        return pd.read_sql(text(query), engine, params={"league": league})
+    return pd.read_sql(text(query + " LIMIT 500"), engine)
+
+def GetPlayerRatings(name: str):
     engine = get_engine()
-    try:
-        return pd.read_sql(
-            "SELECT * FROM vw_player_ratings WHERE player_name LIKE %(name)s ORDER BY season DESC",
-            engine,
-            params={"name": f"%{player_name}%"}
-        )
-    except Exception as e:
-        st.error(f"Lỗi truy vấn vw_player_ratings: {e}")
-        return pd.DataFrame()
- 
-# ── VIEW 3: Tổng quan mùa giải ──────────────────────────────────
-def GetSeasonSummary() -> pd.DataFrame:
+    if not engine: return pd.DataFrame()
+    return pd.read_sql(
+        text("SELECT * FROM vw_player_ratings WHERE player_name LIKE :name ORDER BY season DESC"),
+        engine, params={"name": f"%{name}%"}
+    )
+
+def GetSeasonSummary():
     engine = get_engine()
-    try:
-        return pd.read_sql(
-            "SELECT * FROM vw_season_summary ORDER BY Season_Year DESC",
-            engine
-        )
-    except Exception as e:
-        st.error(f"Lỗi truy vấn vw_season_summary: {e}")
-        return pd.DataFrame()
+    if not engine: return pd.DataFrame()
+    return pd.read_sql("SELECT * FROM vw_season_summary ORDER BY Season_Year DESC", engine)
